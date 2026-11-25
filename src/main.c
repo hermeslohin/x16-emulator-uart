@@ -631,7 +631,8 @@ usage()
 	printf("\tThis option is experimental.\n");
 	printf("-uart-bankread-ff\n");
 	printf("\tReproduce a real-hardware quirk: a UART data register (RBR) read by code\n");
-	printf("\trunning from banked RAM ($A000-$BFFF) returns $00 instead of a received $FF.\n");
+	printf("\trunning from banked RAM ($A000-$BFFF) returns $00 instead of a received $FF\n");
+	printf("\t(and every other received $7F).\n");
 	printf("\tSeen on a real X16 with the TexElec serial card; use it to test that\n");
 	printf("\tserial code in banked RAM reads RBR through main RAM. Off by default.\n");
 	printf("-uartaddr [<address>]\n");

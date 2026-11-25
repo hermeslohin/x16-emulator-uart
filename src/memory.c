@@ -30,12 +30,14 @@ extern serialuartTL16C2550Handle uart2;
 extern bool uart_bankread_ff;
 
 // -uart-bankread-ff: reproduce a quirk seen on a real X16 with the TexElec serial card. A read of
-// RBR ($FF received) by an instruction fetched from banked RAM ($A000-$BFFF) returned $00 there,
-// while the same code in main RAM read $FF. Off by default.
+// RBR by an instruction fetched from banked RAM ($A000-$BFFF) returned $00 for a received $FF
+// (every time) and for a received $7F (roughly every other time), also in the chip's internal
+// loopback mode; the same code in main RAM read every value correctly. Off by default.
 static uint8_t
 uart_quirk(serialuartTL16C2550Handle uart, uint16_t address, uint8_t value, bool debugOn)
 {
-	if (!uart_bankread_ff || debugOn || value != 0xff || (address & 0x07) != 0) {
+	static unsigned int count7f = 0;
+	if (!uart_bankread_ff || debugOn || (value & 0x7f) != 0x7f || (address & 0x07) != 0) {
 		return value;
 	}
 	if (opcode_addr < 0xa000 || opcode_addr >= 0xc000) {
@@ -44,6 +46,9 @@ uart_quirk(serialuartTL16C2550Handle uart, uint16_t address, uint8_t value, bool
 	uint8_t lcr = 0;
 	uart_addrread(uart, &lcr, 3);
 	if (lcr & 0x80) { // DLAB=1: register 0 is the divisor latch, not RBR
+		return value;
+	}
+	if (value == 0x7f && (count7f++ & 1)) {
 		return value;
 	}
 	return 0x00;
